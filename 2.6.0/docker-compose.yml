@@ -1,0 +1,45 @@
+version: "3.7"
+services:
+  namenode:
+    image: hadoop-local:2.6.0
+    hostname: hdfs-namenode
+    networks:
+      - hadoop-cluster
+    ports: 
+        - "9870:9870"
+        - "8088:8088"
+        - "9000:9000"
+    volumes:
+      - ./hdfs-namenode-jars:/jars
+    command: > 
+      bash -c "hdfs namenode & yarn resourcemanager"
+
+  datanode:
+    image: hadoop-local:2.6.0
+    hostname: datanode
+    networks:
+      - hadoop-cluster
+    ports:
+# The host port is randomly assigned by Docker, to allow scaling to multiple DataNodes on the same host
+      - "9864"
+    volumes:
+      - ./datanode-data:/data
+    depends_on: 
+        - namenode
+    command: >
+      bash -c "hdfs datanode & yarn nodemanager"
+
+  secondarynamenode:
+    image: hadoop-local:2.6.0
+    hostname: hdfs-secondary-namenode
+    networks:
+      - hadoop-cluster
+    ports:
+        - "9868:9868"
+    # volumes:
+    #   - ./hdfs-secondary-namenode-data:/data
+    command: hdfs secondarynamenode
+
+networks:
+  hadoop-cluster:
+    driver: bridge
