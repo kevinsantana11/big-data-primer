@@ -1,6 +1,8 @@
 # Docker Hadoop Cluster
 ![hadoop logo](https://hadoop.apache.org/images/hadoop-logo.jpg)
 
+This repository is a modified version of [docker hadoop](https://github.com/bigdatafoundation/docker-hadoop)
+
 The purpose of this repository is to setup a toy Hadoop cluster using docker compose to create a playground where I can mess around with the ecosystem and better understand how it works.
 
 ## Starting the cluster
