@@ -1,0 +1,99 @@
+FROM debian:sid
+
+
+
+####################
+# JAVA
+####################
+
+
+RUN apt-get update && \
+    apt-get install -y openjdk-8-jdk && \
+    rm -rf /var/lib/apt/lists/*
+
+
+####################
+# HADOOP
+####################
+
+ENV HADOOP_VERSION	2.6.0
+ENV HADOOP_HOME		/usr/local/hadoop
+ENV HADOOP_OPTS		-Djava.library.path=/usr/local/hadoop/lib/native
+ENV PATH		$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+
+ENV YARN_RESOURCEMANAGER_USER root
+#ENV HADOOP_SECURE_DN_USER root
+ENV YARN_NODEMANAGER_USER root
+
+RUN apt-get update && \
+    apt-get install -y wget libzip5 libsnappy1v5 libssl-dev && \
+    wget http://archive.apache.org/dist/hadoop/core/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz && \
+    apt-get remove -y wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    tar -zxf /hadoop-$HADOOP_VERSION.tar.gz && \
+    rm /hadoop-$HADOOP_VERSION.tar.gz && \
+    mv hadoop-$HADOOP_VERSION /usr/local/hadoop && \
+    mkdir -p /usr/local/hadoop/logs
+
+# Overwrite default HADOOP configuration files with our config files
+COPY conf  $HADOOP_HOME/etc/hadoop/
+
+# Formatting HDFS
+ENV JAVA_HOME /usr
+RUN mkdir -p /data/dfs/data /data/dfs/name /data/dfs/namesecondary && \
+    hdfs namenode -format
+VOLUME /data
+VOLUME /jars
+
+####################
+# OOZIE
+####################
+
+ENV OOZIE_VERSION	5.2.1
+ENV MAVEN_VERSION 3.9.9
+ENV OOZIE_HOME		/usr/local/oozie
+ENV MAVEN_HOME /usr/local/maven
+ENV PATH		$PATH:$OOZIE_HOME/bin:$MAVEN_HOME
+
+RUN mkdir -p $OOZIE_HOME $MAVEN_HOME
+RUN apt-get update && \
+    apt-get install -y wget && \
+    wget https://dlcdn.apache.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz && \
+    tar -zxf /apache-maven-$MAVEN_VERSION-bin.tar.gz && \
+    mv apache-maven-$MAVEN_VERSION/apache-maven-$MAVEN_VERSION  /usr/local && \
+    mv /usr/local/apache-maven-$MAVEN_VERSION $MAVEN_HOME && \
+    rm /apache-maven-$MAVEN_VERSION-bin.tar.gz && \
+    # wget https://archive.apache.org/dist/oozie/$OOZIE_VERSION/oozie-$OOZIE_VERSION.tar.gz && \
+    # tar -zxf /oozie-$OOZIE_VERSION.tar.gz && \
+    # rm /oozie-$OOZIE_VERSION.tar.gz && \
+    # cd /oozie-$OOZIE_VERSION && \
+    # mvn clean package assembly:single -DskipTests -P hadoop-2,uber -Dhadoop.version=$HADOOP_VERSION && \
+    # tar -xzf distro/target/oozie-$OOZIE_VERSION-distro.tar.gz -C $OOZIE_HOME && \
+    # rm -rf /var/lib/apt/lists/* && \
+    apt-get remove -y wget
+
+####################
+# PORTS
+####################
+#
+# http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.3.0/bk_HDP_Reference_Guide/content/reference_chap2.html
+# http://www.cloudera.com/content/cloudera/en/documentation/core/latest/topics/cdh_ig_ports_cdh5.html
+# http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/core-default.xml
+# http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+
+# HDFS: NameNode (NN):
+#	 9820 = fs.defaultFS			(IPC / File system metadata operations)
+#						(9000 is also frequently used alternatively)
+#	 9871 = dfs.namenode.https-address	(HTTPS / Secure UI)
+#	 9870 = dfs.namenode.https-address	(HTTPS / Secure UI)
+# HDFS: DataNode (DN):
+#	9866 = dfs.datanode.address		(Data transfer)
+#	9867 = dfs.datanode.ipc.address	(IPC / metadata operations)
+#	9864 = dfs.datanode.https.address	(HTTPS / Secure UI)
+# HDFS: Secondary NameNode (SNN)
+#	9868 = dfs.secondary.http.address	(HTTP / Checkpoint for NameNode metadata)
+EXPOSE 9000 9870 9866 9867 9864 9868 8088
+
+EXPOSE 11000 11001
+
+CMD ["tail", "-f", "/dev/null"]

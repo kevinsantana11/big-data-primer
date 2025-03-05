@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+  primary:
+    image: hbase-local:2.5.10
+    hostname: hbase-primary
+    networks:
+      - hbase-cluster
+    ports: 
+        - "8081:16010"
+    command: > 
+      bash -c "hbase master start"
+
+networks:
+  hbase-cluster:
+    driver: bridge

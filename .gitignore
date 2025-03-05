@@ -1,7 +1,7 @@
 .vscode/
 .vscode/*
-wordcountjava/target/
-wordcountjava/target/*
+target/
+target/*
 hdfs-namenode-jars/
 hdfs-namenode-jars/*
 datanode-data/
