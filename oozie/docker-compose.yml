@@ -1,0 +1,29 @@
+version: "3.7"
+services:
+  namenode:
+    image: hadoop-local:2.6.0
+    hostname: hdfs-namenode
+    networks:
+      - hadoop-cluster
+    ports: 
+        - "9870:9870"
+        - "8088:8088"
+        - "9000:9000"
+    volumes:
+      - ./hdfs-namenode-jars:/jars
+    command: > 
+      bash -c "hdfs namenode & yarn resourcemanager"
+  oozie:
+    image: oozie-local:4.3.1
+    hostname: oozie-node
+    networks:
+      - hadoop-cluster
+    ports: 
+        - "11000:11000"
+        - "11001:11001"
+    command: > 
+      bash -c "oozied.sh run"
+
+networks:
+  hadoop-cluster:
+    driver: bridge

@@ -46,31 +46,44 @@ VOLUME /data
 VOLUME /jars
 
 ####################
-# OOZIE
+# OOZIE 
+# Refer to the following guide for more info: https://oozie.apache.org/docs/4.3.1/
 ####################
 
-ENV OOZIE_VERSION	5.2.1
-ENV MAVEN_VERSION 3.9.9
+ENV OOZIE_VERSION	4.2.0
+ENV MAVEN_VERSION   3.8.8
 ENV OOZIE_HOME		/usr/local/oozie
-ENV MAVEN_HOME /usr/local/maven
-ENV PATH		$PATH:$OOZIE_HOME/bin:$MAVEN_HOME
+ENV MAVEN_HOME      /usr/local/maven
+ENV PATH		    $PATH:$OOZIE_HOME/bin:$MAVEN_HOME/bin
 
-RUN mkdir -p $OOZIE_HOME $MAVEN_HOME
+# Install
 RUN apt-get update && \
-    apt-get install -y wget && \
-    wget https://dlcdn.apache.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz && \
-    tar -zxf /apache-maven-$MAVEN_VERSION-bin.tar.gz && \
-    mv apache-maven-$MAVEN_VERSION/apache-maven-$MAVEN_VERSION  /usr/local && \
-    mv /usr/local/apache-maven-$MAVEN_VERSION $MAVEN_HOME && \
+    apt-get install -y zip curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    # Download Maven binaries to build Oozie source
+    curl -O https://dlcdn.apache.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz && \
+    tar -xzf /apache-maven-$MAVEN_VERSION-bin.tar.gz && \
     rm /apache-maven-$MAVEN_VERSION-bin.tar.gz && \
-    # wget https://archive.apache.org/dist/oozie/$OOZIE_VERSION/oozie-$OOZIE_VERSION.tar.gz && \
-    # tar -zxf /oozie-$OOZIE_VERSION.tar.gz && \
-    # rm /oozie-$OOZIE_VERSION.tar.gz && \
-    # cd /oozie-$OOZIE_VERSION && \
-    # mvn clean package assembly:single -DskipTests -P hadoop-2,uber -Dhadoop.version=$HADOOP_VERSION && \
-    # tar -xzf distro/target/oozie-$OOZIE_VERSION-distro.tar.gz -C $OOZIE_HOME && \
-    # rm -rf /var/lib/apt/lists/* && \
-    apt-get remove -y wget
+    mv /apache-maven-$MAVEN_VERSION $MAVEN_HOME && \
+    # Download Oozie source
+    curl -O https://archive.apache.org/dist/oozie/$OOZIE_VERSION/oozie-$OOZIE_VERSION.tar.gz && \
+    tar -xzf /oozie-$OOZIE_VERSION.tar.gz && \
+    rm /oozie-$OOZIE_VERSION.tar.gz && \
+    mv /oozie-$OOZIE_VERSION /tmp/oozie-source && \
+    cd /tmp/oozie-source && \
+    # Build and install the generated distribution
+    mvn clean package assembly:single -DskipTests -Phadoop-2,uber -Dhadoop.version=$HADOOP_VERSION && \
+    tar -xzf distro/target/oozie-$OOZIE_VERSION-distro.tar.gz -C /tmp && \
+    mv /tmp/oozie-$OOZIE_VERSION $OOZIE_HOME && \
+    mkdir -p $OOZIE_HOME/libext && \
+    # Install ExtJS for the web console
+    curl -O https://archive.cloudera.com/gplextras/misc/ext-2.2.zip && \
+    mv ext-2.2.zip $OOZIE_HOME/libext && \
+    apt-get remove -y curl && \
+    rm -rf /tmp/*
+
+# Boostrap oozie metadata db
+RUN ooziedb.sh create -run oozie.sql
 
 ####################
 # PORTS
@@ -96,4 +109,5 @@ EXPOSE 9000 9870 9866 9867 9864 9868 8088
 
 EXPOSE 11000 11001
 
-CMD ["tail", "-f", "/dev/null"]
+# CMD ["tail", "-f", "/dev/null"]
+CMD oozied.sh run
