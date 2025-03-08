@@ -1,22 +1,23 @@
-# Docker Hadoop Cluster
+# Hadoop Playground
 ![hadoop logo](https://hadoop.apache.org/images/hadoop-logo.jpg)
 
 This repository is a modified version of [docker hadoop](https://github.com/bigdatafoundation/docker-hadoop)
 
 The purpose of this repository is to setup a toy Hadoop cluster using docker compose to create a playground where I can mess around with the ecosystem and better understand how it works.
 
-## Starting the cluster
+## Hadoop Cluster(MapReduce/Crunch)
+### Starting the cluster
 To start the cluster you need to build the image and then initialize the cluster
 
 1. Build the image
 
 For the 3.3.6 image
 
-> docker build --tag hadoop-local:3.3.6 .
+> cd 3.3.6 && docker build --tag hadoop-local:3.3.6 .
 
 For the 2.6.0 image
 
-> docker build --tag hadoop-local:2.6.0 .
+> cd 2.6.0 && docker build --tag hadoop-local:2.6.0 .
 
 2. Start the cluster
 > docker compose up -d
@@ -24,7 +25,7 @@ For the 2.6.0 image
 3. Remember to clean up the folders created when standing up the cluster
 > sudo rm -rf datanode-data hdfs-namenode-jars
 
-## Add Data & Submit a Map Reduce job 
+### Add Data & Submit a Map Reduce job 
 For the following instructions it's recommended to run them from within one of the containers in the cluster. You can do this by running the following command:
 
 For the 2.6.0 version.
@@ -47,12 +48,12 @@ For the 2.6.0 version.
 4. Inspect the result.
 > hadoop fs -cat /README.result/\*
 
-## Use your own Map Reduce Job
+### Use your own Map Reduce Job
 If you would like to build and use your own Map reduce job follow these instructions. An example repository at the root folder of this repository exists that can be built, executed and modified.
 
-1. Go to the sample Map Reduce code repository `wordcountjava` and build the package.
-> cd ../wordcountjava && mvn clean package
-2. The previous step generates a build artifact `wordcountjava-1.0-SNAPSHOT.jar`. Well want to copy this over into the `/jars` folder that's exposed in the host machine and linked internally to the name node. This makes the **jar** available to be executed within the container. Lets move it.
+1. Go to the sample Map Reduce code repository `hadoop-wordcount` and build the package.
+> cd hadoop-wordcount && mvn clean package
+2. The previous step generates a build artifact `wordcount-1.0-SNAPSHOT.jar`. Well want to copy this over into the `/jars` folder that's exposed in the host machine and linked internally to the name node. This makes the **jar** available to be executed within the container. Lets move it.
 > sudo cp target/wordcountjava-1.0-SNAPSHOT.jar ../3.3.6/hdfs-namenode-jars
 3. Obtain a remote shell into the namenode and run the following command to execute the custom Map Reduce job we just built and copied over.
 > hadoop jar /jars/wordcountjava-1.0-SNAPSHOT.jar org.apache.hadoop.examples.WordCount /README.txt /README.result
@@ -65,7 +66,7 @@ If you would like to build and use your own Map reduce job follow these instruct
 If you want to utilize Apache Crunch for your Hadoop jobs it should be noted that you will want to utilize Hadoop version 2.6.0 and likely want to build your java jar for java <= 1.8. The example repository also contains an example Crunch job. To run that job utilize the following command:
 > hadoop jar /jars/wordcountjava-1.0-SNAPSHOT.jar org.apache.hadoop.examples.WordCountCrunch /README.txt /README.result
 
-## Accessing the web interfaces
+### Accessing the web interfaces
 Each component provide its own web UI. Open you browser at one of the URLs below, where `dockerhost` is the name / IP of the host running the docker daemon. If using Linux, this is the IP of your linux box. If using OSX or Windows (via Boot2docker), you can find out your docker host by typing `boot2docker ip`. On my machine, the NameNode UI is accessible at `http://192.168.59.103:50070/`
 
 | Component               | Port                                               |
@@ -76,22 +77,37 @@ Each component provide its own web UI. Open you browser at one of the URLs below
 | YARN Resource Manager   | [http://dockerhost:8088](http://dockerhost:8088) |
 | YARN Node Manager   | [http://dockerhost:8042](http://dockerhost:8042) |
 
+## Spark Cluster
+### Starting the cluster
+To start the cluster you need to build the image and then initialize the cluster
 
-## Use this image using docker-compose
-Note: your terminal need to be in the folder where the docker-compose.yml is located.
+1. Build the image
 
-You can start this image using docker-compose. It will start a namenode, a secondary nanenode and a datanode. You have the possibility to scale the datanode.
+For the 3.3.0 image
 
-## Scaling the datanode
-If you want to increase the number of datanode in your cluster
+> cd spark && docker build --tag spark-local:3.3.0 .
 
-    docker-compose scale datanode=<number of instance>
+2. Start the cluster
+> docker compose up -d
 
-## Finding the port for web access
-To allow the datanode to scale, we need to let docker decide the port used on the host machine. To find which port it is
+3. Remember to clean up the folders created when standing up the cluster
+> sudo rm -rf spark-jars
 
-    docker-compose port datanode 50075
+### Submit a Spark job 
+For the following instructions it's recommended to run them from within one of the containers in the cluster. You can do this by running the following command:
 
-With this port, you can access the web interfaces of the datanode.
+> docker exec -it spark-master-1 /bin/bash
 
+1. Run the example Spark job, which will output the results to stdout.
+> spark-submit --class org.apache.spark.examples.JavaWordCount --master spark://spark-master:7077 /usr/local/spark/examples/jars/spark-examples_2.12-3.3.0.jar file:///var/log/README
 
+...
+### Use your own Spark Job
+If you would like to build and use your own Spark job follow these instructions. An example repository at the root folder of this repository exists that can be built, executed and modified.
+
+1. Go to the sample Map Reduce code repository `spark-wordcount` and build the package.
+> cd spark-wordcount && mvn clean package
+2. The previous step generates a build artifact `wordcount-1.0-SNAPSHOT.jar`. Well want to copy this over into the `/jars` folder that's exposed in the host machine and linked internally to the name node. This makes the **jar** available to be executed within the container. Lets move it.
+> sudo cp target/wordcountjava-1.0-SNAPSHOT.jar ../spark/spark-jars
+3. Obtain a remote shell into the spark-master node and run the following command to execute the custom Spark job we just built and copied over.
+> spark-submit --class org.apache.spark.examples.WordCount --master spark://spark-master:7077 /jars/wordcount-1.0-SNAPSHOT.jar file:///var/log/README
