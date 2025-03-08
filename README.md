@@ -1,45 +1,57 @@
 # Hadoop Playground
 ![hadoop logo](https://hadoop.apache.org/images/hadoop-logo.jpg)
 
-This repository is a modified version of [docker hadoop](https://github.com/bigdatafoundation/docker-hadoop)
+## Attribution
+I sourced the examples from the apache example repositories:
+* [Oracles MapReduce example](https://docs.oracle.com/en-us/iaas/Content/bigdata/hadoop-odh-hadoop-examples.htm)
+* [Apache Spark examples](https://github.com/apache/spark/tree/master/examples)
+* [Crunch MapReduce exmaple](https://github.com/jwills/crunch-demo)
 
-The purpose of this repository is to setup a toy Hadoop cluster using docker compose to create a playground where I can mess around with the ecosystem and better understand how it works.
+The docker images and docker compose files were built by referencing the following repositories:
+* [docker-hadoop](https://github.com/bigdatafoundation/docker-hadoop)
+* [docker-spark](https://github.com/big-data-europe/docker-spark/tree/master)
+* For Apache Oozie, I utilized the guide provided on the projects documentation but was only able to build up to version 4.2.0. I noticed online other repositories were using this
+and ultimately the other versions would fail to build due to unresolveable dependencies.
+
+## Overview
+The purpose of this repository is to setup dev environments utilizing different data processing technologies such as Hadoop, Crunch, Spark, Oozie and friends along with examples repositories
+to get you started building code that either interacts with or is executed by a particular technology in the data processing stack.
 
 ## Hadoop Cluster(MapReduce/Crunch)
 ### Starting the cluster
 To start the cluster you need to build the image and then initialize the cluster
 
-1. Build the image
+1. Build the image.
 
-For the 3.3.6 image
+For the 3.3.6 image:
 
 > cd 3.3.6 && docker build --tag hadoop-local:3.3.6 .
 
-For the 2.6.0 image
+For the 2.6.0 image:
 
 > cd 2.6.0 && docker build --tag hadoop-local:2.6.0 .
 
-2. Start the cluster
+2. Start the cluster.
 > docker compose up -d
 
-3. Remember to clean up the folders created when standing up the cluster
+3. Remember to clean up the folders created when shutting down the cluster.
 > sudo rm -rf datanode-data hdfs-namenode-jars
 
 ### Add Data & Submit a Map Reduce job 
 For the following instructions it's recommended to run them from within one of the containers in the cluster. You can do this by running the following command:
 
-For the 2.6.0 version.
+For the 2.6.0 version:
 
 > docker exec -it 336-namenode-1 /bin/bash
 
-For the 2.6.0 version.
+For the 2.6.0 version:
 
 > docker exec -it 260-namenode-1 /bin/bash
 
-1. Add data in HDFS
+1. Add data in HDFS.
 > hadoop fs -put /usr/local/hadoop/README.txt /README.txt
 
-2. Run the example Map Reduce job
+2. Run the example Map Reduce job.
 > hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.0.jar wordcount  /README.txt /README.result
 
 3. If the result already exists, remove it.
@@ -81,16 +93,16 @@ Each component provide its own web UI. Open you browser at one of the URLs below
 ### Starting the cluster
 To start the cluster you need to build the image and then initialize the cluster
 
-1. Build the image
+1. Build the image.
 
-For the 3.3.0 image
+For the 3.3.0 image:
 
 > cd spark && docker build --tag spark-local:3.3.0 .
 
-2. Start the cluster
+2. Start the cluster.
 > docker compose up -d
 
-3. Remember to clean up the folders created when standing up the cluster
+3. Remember to clean up the folders created when standing up the cluster.
 > sudo rm -rf spark-jars
 
 ### Submit a Spark job 

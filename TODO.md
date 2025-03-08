@@ -1,10 +1,14 @@
-* Add Crunch MapReduce job (done)
-* Integrate HBase/Oozie/Hive
-* Integrate Spark
-  * Build Spark job
-  * Run job on Hadoop cluster
-* Mess around with above
-* Add ZooKeeper for coordination and management
-* Add directions and manifests for a kubernetes deployment
-  * Start with minikube
-  * try multi-node kubernetes deployment
+* Hadoop (done)
+  * basic MapReduce example (done)
+  * basic Crunch MapReduce example (done)
+* Integrate Ecosystem Services
+  * HBase
+    * basic example
+  * Oozie (done)
+    * basic example
+  * Hive
+    * basic example
+  * Spark (done)
+    * basic example (done)
+  * Hue
+* Provide Kubernetes manifest file(s)/deployment instructions
