@@ -1,0 +1,25 @@
+services:
+  master:
+    image: spark-local:3.3.0
+    hostname: spark-master
+    networks:
+      - spark-cluster
+    volumes:
+      - ./spark-jars:/jars
+    ports:
+        - "8081:8081"
+    command: >
+      bash -c "init master -h spark-master -p 7077"
+  worker:
+    image: spark-local:3.3.0
+    hostname: spark-worker
+    networks:
+      - spark-cluster
+    ports:
+        - "8080:8080"
+    command: >
+      bash -c "init worker spark://spark-master:7077"
+
+networks:
+  spark-cluster:
+    driver: bridge
