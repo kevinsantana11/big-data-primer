@@ -6,3 +6,5 @@ hdfs-namenode-jars/
 hdfs-namenode-jars/*
 datanode-data/
 datanode-data/*
+spark-jars/
+spark-jars/*
