@@ -110,8 +110,10 @@ For the following instructions it's recommended to run them from within one of t
 
 > docker exec -it spark-master-1 /bin/bash
 
-1. Run the example Spark job, which will output the results to stdout.
-> spark-submit --class org.apache.spark.examples.JavaWordCount --master spark://spark-master:7077 /usr/local/spark/examples/jars/spark-examples_2.12-3.3.0.jar file:///var/log/README
+1. Run the example Spark job, which will output the results to stdout.s_2.12-3.3.0.jar file:///var/log/README
+> spark-submit --class org.apache.spark.examples.JavaWordCount --master spark://spark-master.default.svc.cluster.local:7077 /usr/local/spark/examples/jars/spark-examples_2.12-3.3.0.jar file:///var/log/README
+
+> spark-submit --class org.apache.spark.examples.JavaWordCount --master spark://spark-master.default.svc.cluster.local:7077 --conf spark.driver.host=spark-master.default.svc.cluster.local /usr/local/spark/examples/jars/spark-examples_2.12-3.3.0.jar file:///var/log/README
 
 ...
 ### Use your own Spark Job

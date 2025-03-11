@@ -9,7 +9,7 @@ services:
     ports:
         - "8081:8081"
     command: >
-      bash -c "init master -h spark-master -p 7077"
+      bash -c "init master --webui-port 8081 -h spark-master -p 7077"
   worker:
     image: spark-local:3.3.0
     hostname: spark-worker
@@ -18,7 +18,7 @@ services:
     ports:
         - "8080:8080"
     command: >
-      bash -c "init worker spark://spark-master:7077"
+      bash -c "init worker --webui-port 8080 spark://spark-master:7077"
 
 networks:
   spark-cluster:

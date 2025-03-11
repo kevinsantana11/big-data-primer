@@ -1,13 +1,5 @@
 FROM debian:sid
 
-ENV ENABLE_INIT_DAEMON false
-ENV INIT_DAEMON_BASE_URI http://identifier/init-daemon
-ENV INIT_DAEMON_STEP spark_master_init
-
-ENV BASE_URL=https://archive.apache.org/dist/spark/
-ENV SPARK_VERSION=3.3.0
-ENV HADOOP_VERSION=3
-
 ####################
 # JAVA
 ####################
@@ -18,20 +10,17 @@ RUN apt-get update && \
 
 ####################
 # SPARK
-
-# SPARK_MASTER_HOST
-# SPARK_MASTER_PORT
-# SPARK_MASTER_WEBUI_PORT
 ####################
+
+ENV SPARK_VERSION=3.3.0
+ENV HADOOP_VERSION=3
+
 
 ENV SPARK_HOME /usr/local/spark
 ENV PATH $SPARK_HOME/bin:$PATH
-ENV SPARK_MASTER_PORT 7077
-ENV SPARK_MASTER_WEBUI_PORT 8081
-ENV SPARK_WORKER_WEBUI_PORT 8080
 
 RUN apt-get update \
-  	&& apt-get install -y curl \
+  	&& apt-get install -y curl net-tools iputils-ping bind9-dnsutils \
   	&& curl -O https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz \
   	&& tar -xvzf spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz \
   	&& mv spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION $SPARK_HOME \
@@ -54,4 +43,4 @@ VOLUME /jars
 # SPARK: Worker:
 # 	8080 = Spark worker web ui port
 ####################
-EXPOSE 8080 8081 7077 6066
+EXPOSE 8080 8081 7077 6066 4040

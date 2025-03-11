@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-master
+spec:
+  selector:
+    app: spark-master
+  ports:
+  - name: web-ui
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  - name: master
+    protocol: TCP
+    port: 7077
+    targetPort: 7077
+  - name: master-rest
+    protocol: TCP
+    port: 6066
+    targetPort: 6066
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-client
+spec:
+  selector:
+    app: spark-client
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-master
+  labels:
+    app: spark-master
+spec:
+  selector:
+    matchLabels:
+      app: spark-master
+  template:
+    metadata:
+      labels:
+        app: spark-master
+    spec:
+      containers:
+      - name: spark-master
+        image: spark-local:3.3.0
+        imagePullPolicy: Never
+        env:
+          - name: SPARK_MASTER_URL
+            value: spark://spark-master.default.svc.cluster.local:7077
+        command: ["/bin/bash", "-c", "init master -h spark-master.default.svc.cluster.local -p 7077 --webui-port 8080"]
+        resources:
+          limits:
+            memory: 1024Mi
+            cpu: 1000m
+        ports:
+        - containerPort: 8080
+          hostPort: 8080
+        - containerPort: 7077
+          hostPort: 7077
+        - containerPort: 6066
+          hostPort: 6066
+        - containerPort: 4040
+          hostPort: 4040
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: spark-worker
+  labels:
+    app: spark-worker
+spec:
+  selector:
+    matchLabels:
+      name: spark-worker
+  template:
+    metadata:
+      labels:
+        name: spark-worker
+    spec:
+      containers:
+      - name: spark-worker
+        image: spark-local:3.3.0
+        imagePullPolicy: Never
+        env:
+          - name: SPARK_MASTER_URL
+            value: spark://spark-master.default.svc.cluster.local:7077
+        command: ["/bin/bash", "-c", "init worker --webui-port 8081 --cores 1 --memory 2048M spark://spark-master.default.svc.cluster.local:7077"]
+        resources:
+          limits:
+            memory: 2048Mi
+            cpu: 1000m
+        ports:
+        - containerPort: 8081
+          hostPort: 8081
+        
